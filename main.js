@@ -31,16 +31,17 @@
 
         this.board.bars.push(this); //se agrega a board este elemento
         this.kind = "rectangle"; //forma de lo que se va a dibujar
+        this.speed = 10; //parámetro para mover las barras
     }
 
     /*se modifica el modelo para agregar futuras funcionalidades para mover
     arriba y abajo las barras */
     self.Bar.prototype = {
         down: function () {
-            
+            this.y += this.speed;
         },
         up: function () {
-
+            this.x -= this.speed;
         }
     }
 })();
@@ -83,14 +84,27 @@ y se le dan como atributo al canvas */
     }
 })();
 
+//se sacan de main para que puedan ser usadas por el listener de flechas
+var board = new Board(1000, 400);
+var bar = new Bar(20, 100, 40, 100, board);
+var canvas = document.getElementById("canvas");
+var boardView = new BoardView(canvas, board);
+
+/* listener de flechas (keydown), en el video se usa .keycode pero este método
+sale como obsoleto y la alternativa es .key */
+document.addEventListener("keydown", function (ev) {
+    if (ev.key == "ArrowUp") {
+        bar.up();
+    } else if (ev.key == "ArrowDown") {
+        bar.down();
+    }
+})
+
 //en el evento "load" (carga de la pág) se llama la función main.
 window.addEventListener("load", main);
 
 //función que crea los elementos (controlador)
 function main() {
-    var board = new Board(1000, 400);
-    var bar = new Bar(20, 100, 40, 100, board);
-    var canvas = document.getElementById("canvas");
-    var boardView = new BoardView(canvas, board);
+    //falta hacer que se dibuje constantemente para ver el mov de las barras
     boardView.draw();
 }
