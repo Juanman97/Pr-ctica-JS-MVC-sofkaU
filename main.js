@@ -13,12 +13,30 @@
     crea la lista de elementos del tablero y los retorna*/
     self.Board.prototype = {
         get elements() {
-            var elements = this.bars;
+            /* en lugar de agregar una referencia de bars en elements, se
+            agrega una copia creada con map para que no estalle :/ */
+            var elements = this.bars.map(function (bar) { return bar });
             elements.push(this.ball);
             return elements;
         }
     }
 })();
+
+//se crea la clase Ball con sus propiedades
+(function () {
+    self.Ball = function (x, y, radius, board) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.board = board;
+        this.speed_y = 0;
+        this.speed_x = 3;
+
+        this.board.ball = this;
+        this.kind = "circle";
+    }
+})();
+
 
 //se crea el elemento bar con sus propiedades.
 (function () {
@@ -35,13 +53,18 @@
     }
 
     /*se modifica el modelo para agregar futuras funcionalidades para mover
-    arriba y abajo las barras */
+    arriba y abajo las barras.
+    Se agrega condición para evitar que se salgan del tablero*/
     self.Bar.prototype = {
         down: function () {
-            this.y += this.speed;
+            if (this.y < this.board.height - this.height) {
+                this.y += this.speed;
+            }
         },
         up: function () {
-            this.x -= this.speed;
+            if (this.y > 0) {
+                this.y -= this.speed;
+            }
         }
     }
 })();
@@ -60,43 +83,69 @@ y se le dan como atributo al canvas */
     }
 
     /* función para llamar la función draw con cada elemento que tenga
-    el tablero */
+    el tablero.
+    se agrega función play para ejecutar todas las funciones para jugar */
     self.BoardView.prototype = {
+        //para limpiar el board y que la línea se actualice en lugar de alargarse
+        clean: function () {
+            this.context.clearRect(0, 0, this.board.width, this.board.height)
+        },
         draw: function () {
             for (var i = this.board.elements.length - 1; i >= 0; i--){
                 var el = this.board.elements[i];
                 draw(this.context, el);
             }
+        },
+        play: function () {
+            this.clean();
+            this.draw();
         }
     }
 
     //función para dibujar un elemento del tablero según su forma (kind).
     //.fillRect es una función del contexto de canvas para dibujar un cuadrado
+    //se agrega el caso "circle" para la bola
     function draw(context, element) {
-        if (element !== null && element.hasOwnProperty("kind")) {
-           switch (element.kind) {
+        /*se elimina el if que comprueba que no sea null y tenga kind porque afecta
+        el rendimiento */
+        switch (element.kind) {
             case "rectangle":
                 context.fillRect(element.x, element.y, element.width, element.height);
                 break;
-        } 
+            case "circle":
+                context.beginPath();
+                context.arc(element.x, element.y, element.radius, 0, 7);
+                context.fill();
+                context.closePath();
+                break;
         }
         
     }
 })();
 
 //se sacan de main para que puedan ser usadas por el listener de flechas
-var board = new Board(1000, 400);
-var bar = new Bar(20, 100, 40, 100, board);
+var board = new Board(600, 400);
+var bar = new Bar(20, 150, 30, 100, board);
+var bar_2 = new Bar(550, 150, 30, 100, board);
 var canvas = document.getElementById("canvas");
 var boardView = new BoardView(canvas, board);
+var ball = new Ball(350, 100, 10, board);
+
+
+window.requestAnimationFrame(main);
 
 /* listener de flechas (keydown), en el video se usa .keycode pero este método
 sale como obsoleto y la alternativa es .key */
 document.addEventListener("keydown", function (ev) {
+    ev.preventDefault();
     if (ev.key == "ArrowUp") {
         bar.up();
     } else if (ev.key == "ArrowDown") {
         bar.down();
+    } else if (ev.key == "w") {
+        bar_2.up();
+    } else if (ev.key == "s") {
+        bar_2.down();
     }
 })
 
@@ -105,6 +154,6 @@ window.addEventListener("load", main);
 
 //función que crea los elementos (controlador)
 function main() {
-    //falta hacer que se dibuje constantemente para ver el mov de las barras
-    boardView.draw();
+    boardView.play();
+    window.requestAnimationFrame(main);
 }
