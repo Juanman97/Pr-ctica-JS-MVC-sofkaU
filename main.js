@@ -30,8 +30,11 @@
         this.radius = radius;
         this.board = board;
         this.speed_y = 0;
-        this.speed_x = 3;
+        this.speed_x = 1;
         this.direction = 1; //1 = derecha, -1 = izquierda
+        this.bounce_angle = 0;
+        this.max_bounce_angle = Math.PI / 12;
+        this.speed = 3;
 
         this.board.ball = this;
         this.kind = "circle";
@@ -42,6 +45,31 @@
         move: function () {
             this.x += (this.speed_x * this.direction);
             this.y += (this.speed_y * this.direction);
+        },
+
+        //agregar parámetros height y width a la pelota
+        get width() {
+            return this.radius * 2;
+        },
+        get height() {
+            return this.radius * 2;
+        },
+
+        collision: function (bar) {
+            //reacciona a la colisión con una barra que recibe como param
+            var relative_intersect_y = (bar.y + (bar.height / 2)) - this.y;
+            var normalized_intersect_y = relative_intersect_y / (bar.height / 2);
+
+            this.bounce_angle = normalized_intersect_y * this.max_bounce_angle;
+
+            this.speed_y = this.speed * -Math.sin(this.bounce_angle);
+            this.speed_x = this.speed * Math.cos(this.bounce_angle);
+
+            if (this.x > (this.board.width / 2)) {
+                this.direction = -1;
+            } else {
+                this.direction = 1;
+            }
         }
     }
 })();
@@ -106,15 +134,53 @@ y se le dan como atributo al canvas */
                 draw(this.context, el);
             }
         },
+
+        //función para verificar la colisión
+        check_collision: function () {
+            for (var i = this.board.bars.length - 1; i >= 0; i--){
+                var bar = this.board.bars[i];
+                if (hit(bar, this.board.ball)) {
+                    this.board.ball.collision(bar);
+                }
+            }
+        },
+
         play: function () {
             if (this.board.playing) {
                 this.clean();
                 this.draw();
+                this.check_collision();
                 this.board.ball.move();
             }
-            
         }
     }
+
+    //función que comprueba colisiones entre 2 elementos con un atributo x, y, widht y height
+    function hit(a, b) {
+        //revisa si a colisiona con b
+        var hit = false;
+        //colisiones horizontales
+        if ((b.x + b.width >= a.x) && (b.x < a.x + a.width)) {
+            //colisiones verticales
+            if ((b.y + b.height >= a.y) && (b.y < a.y + a.height)) {
+                hit = true;
+            }
+        }
+        //colisión de a con b
+        if ((b.x <= a.x) && (b.x + b.width >= a.x + a.width)) {
+            if ((b.y <= a.y) && (b.y + b.height >= a.y + a.height)) {
+                hit = true;
+            }
+        }
+        //colisión de b con a
+        if ((a.x <= b.x) && (a.x + a.width >= b.x + b.width)) {
+            if ((a.y <= b.y) && (a.y + a.height >= b.y + b.height)) {
+                hit = true;
+            }
+        }
+        return hit;
+    }
+
 
     //función para dibujar un elemento del tablero según su forma (kind).
     //.fillRect es una función del contexto de canvas para dibujar un cuadrado
