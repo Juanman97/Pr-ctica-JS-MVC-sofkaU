@@ -31,9 +31,18 @@
         this.board = board;
         this.speed_y = 0;
         this.speed_x = 3;
+        this.direction = 1; //1 = derecha, -1 = izquierda
 
         this.board.ball = this;
         this.kind = "circle";
+    }
+
+    //se modifica el modelo Ball para agregar su movimiento
+    self.Ball.prototype = {
+        move: function () {
+            this.x += (this.speed_x * this.direction);
+            this.y += (this.speed_y * this.direction);
+        }
     }
 })();
 
@@ -54,15 +63,16 @@
 
     /*se modifica el modelo para agregar futuras funcionalidades para mover
     arriba y abajo las barras.
-    Se agrega condición para evitar que se salgan del tablero*/
+    Se agrega condición para evitar que se salgan del tablero
+    Se agrega condición para evitar que mueva la barra estando pausado*/
     self.Bar.prototype = {
         down: function () {
-            if (this.y < this.board.height - this.height) {
+            if ((this.y < this.board.height - this.height) && this.board.playing) {
                 this.y += this.speed;
             }
         },
         up: function () {
-            if (this.y > 0) {
+            if ((this.y > 0) && (this.board.playing)) {
                 this.y -= this.speed;
             }
         }
@@ -97,8 +107,12 @@ y se le dan como atributo al canvas */
             }
         },
         play: function () {
-            this.clean();
-            this.draw();
+            if (this.board.playing) {
+                this.clean();
+                this.draw();
+                this.board.ball.move();
+            }
+            
         }
     }
 
@@ -131,21 +145,29 @@ var canvas = document.getElementById("canvas");
 var boardView = new BoardView(canvas, board);
 var ball = new Ball(350, 100, 10, board);
 
+boardView.draw();
 
 window.requestAnimationFrame(main);
 
 /* listener de flechas (keydown), en el video se usa .keycode pero este método
-sale como obsoleto y la alternativa es .key */
+sale como obsoleto y la alternativa es .key.
+se agrega función de pausa*/
 document.addEventListener("keydown", function (ev) {
-    ev.preventDefault();
     if (ev.key == "ArrowUp") {
+        ev.preventDefault();
         bar.up();
     } else if (ev.key == "ArrowDown") {
+        ev.preventDefault();
         bar.down();
     } else if (ev.key == "w") {
+        ev.preventDefault();
         bar_2.up();
     } else if (ev.key == "s") {
+        ev.preventDefault();
         bar_2.down();
+    } else if (ev.key == " ") {
+        ev.preventDefault();
+        board.playing = !board.playing;
     }
 })
 
