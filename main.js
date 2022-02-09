@@ -245,3 +245,16 @@ function main() {
     boardView.play();
     window.requestAnimationFrame(main);
 }
+
+
+/* PREGUNTAS
+- Cómo funciona canvas
+- keydown event .keycode sale como obsoleto, cuál usar? (según
+google usar .key para obtener el nombre de la tecla).
+- Otro idioma de teclado hará fallar .key?
+- cómo funcionan las colisiones (entender para agregar colisión con 
+los bordes verticales del tablero)
+- Las barras suben y bajan indefinidamente. (resuelto)
+- Las barras cambian de posición mientras los gráficos están 
+pausados (resuelto)
+*/
