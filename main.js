@@ -257,4 +257,5 @@ los bordes verticales del tablero)
 - Las barras suben y bajan indefinidamente. (resuelto)
 - Las barras cambian de posición mientras los gráficos están 
 pausados (resuelto)
+- cómo hacer que se puedan mover las dos barras a la vez?
 */
